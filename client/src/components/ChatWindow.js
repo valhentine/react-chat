@@ -1,3 +1,4 @@
+
 import React from 'react'
 import { connect } from 'react-redux'
 import { setFlash } from '../reducers/flash'
@@ -10,6 +11,7 @@ import {
   Button,
 } from 'semantic-ui-react'
 import styled from 'styled-components'
+import axios from 'axios'
 import ChatMessage from './ChatMessage'
 
 const MainWindow = styled(Segment)`
@@ -34,17 +36,31 @@ const Underline = styled(Header)`
 class ChatWindow extends React.Component {
   state = { message: '' }
 
+  componentDidMount() {
+    window.MessageBus.start()
+    const { dispatch } = this.props
+    dispatch(setFlash('Welcome to React Chat', 'green'))
+
+    window.MessageBus.subscribe("/chat_channel", (data) => {
+      dispatch(addMessage(data))
+    })
+  }
+
+  componentWillUnmount() {
+    window.MessageBus.unsubscribe("/chat_channel")
+  }
+
   displayMessages = () => {
     const { messages } = this.props
 
     if (messages.length)
       return messages.map( (m,i) => <ChatMessage key={i} {...m} /> )
 
-      return (
-        <Segment inverted textAlign="center">
-          <Header as="h1">No Messages Yet</Header>
-        </Segment>
-      )
+    return (
+      <Segment inverted textAlign="center">
+        <Header as="h1">No Messages Yet</Header>
+      </Segment>
+    )
   }
 
   setMessage = (e) => {
@@ -52,11 +68,11 @@ class ChatWindow extends React.Component {
   }
 
   addMessage = (e) => {
-    e.preventDefualt()
-    const { dispatch, user: { email } } = this.props
+    e.preventDefault()
+    const { user: { email } } = this.props
     const { message } = this.state
-    dispatch(addMessage({ email, body: message }))
-    this.setState({ message: '' })
+    axios.post('/api/messages', { email, body: message })
+      .then( () => this.setState({ message: '' }) )
   }
 
   render() {
@@ -73,7 +89,7 @@ class ChatWindow extends React.Component {
             <TextArea
               value={this.state.message}
               onChange={this.setMessage}
-              placeholder="Say something mean..."
+              placeholder="Say something nice..."
               autoFocus
               required
             >
