@@ -10,7 +10,7 @@ import {
   Button,
 } from 'semantic-ui-react'
 import styled from 'styled-components'
-//import ChatMessage from './ChatMessage'
+import ChatMessage from './ChatMessage'
 
 const MainWindow = styled(Segment)`
   border: 3px solid black;
@@ -22,27 +22,43 @@ const MainWindow = styled(Segment)`
 
 const MessageInput = styled(Segment)`
   border-radius: 10px;
-  width: 0 auto;
-  padding: 10;
+  width: 80%;
+  margin: 0 auto;
+  padding: 10px;
 `
 
 const Underline = styled(Header)`
   text-decoration: underline;
 `
 
-displayMessages = () => {
-
-}
-
-setMessage = (e) => {
-
-}
-
-addMessage = (e) => {
-
-}
-
 class ChatWindow extends React.Component {
+  state = { message: '' }
+
+  displayMessages = () => {
+    const { messages } = this.props
+
+    if (messages.length)
+      return messages.map( (m,i) => <ChatMessage key={i} {...m} /> )
+
+      return (
+        <Segment inverted textAlign="center">
+          <Header as="h1">No Messages Yet</Header>
+        </Segment>
+      )
+  }
+
+  setMessage = (e) => {
+    this.setState({ message: e.target.value })
+  }
+
+  addMessage = (e) => {
+    e.preventDefualt()
+    const { dispatch, user: { email } } = this.props
+    const { message } = this.state
+    dispatch(addMessage({ email, body: message }))
+    this.setState({ message: '' })
+  }
+
   render() {
     return (
       <Segment basic>
@@ -67,11 +83,9 @@ class ChatWindow extends React.Component {
             </Segment>
           </Form>
         </MessageInput>
+      </Segment>
     )
   }
-}
-
-class ChatWindow extends React.Component {
 }
 
 const mapStateToProps = (state) => {
